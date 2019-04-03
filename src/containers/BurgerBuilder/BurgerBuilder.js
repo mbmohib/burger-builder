@@ -95,30 +95,41 @@ class BurgerBuilder extends Component {
     };
 
     handleContinuePurchase = () => {
-        this.setState({ loading: true });
+        // this.setState({ loading: true });
 
-        const order = {
-            ingredients: this.state.ingredients,
-            price: this.state.totalPrice,
-            customer: {
-                name: 'Mohib',
-                address: {
-                    area: 'Kallayanpur',
-                    city: 'Dhaka'
-                },
-                email: 'mbmohib@gmail.com'
-            },
-            deliveryMethod: 'cashOnDelivery'
-        };
+        // const order = {
+        //     ingredients: this.state.ingredients,
+        //     price: this.state.totalPrice,
+        //     customer: {
+        //         name: 'Mohib',
+        //         address: {
+        //             area: 'Kallayanpur',
+        //             city: 'Dhaka'
+        //         },
+        //         email: 'mbmohib@gmail.com'
+        //     },
+        //     deliveryMethod: 'cashOnDelivery'
+        // };
 
-        axios
-            .post('/orders.json', order)
-            .then(response => {
-                this.setState({ loading: false, purchaseModalOpen: false });
-            })
-            .catch(error => {
-                this.setState({ loading: false, purchaseModalOpen: false });
-            });
+        // axios
+        //     .post('/orders.json', order)
+        //     .then(response => {
+        //         this.setState({ loading: false, purchaseModalOpen: false });
+        //     })
+        //     .catch(error => {
+        //         this.setState({ loading: false, purchaseModalOpen: false });
+        //     });
+        this.setState({ purchaseModalOpen: false })
+        
+        const queryParams = [];
+        for (let i in this.state.ingredients) {
+            queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i]))
+        }
+        
+        this.props.history.push({
+            pathname: '/checkout',
+            search: '?' + queryParams.join('&')
+        })
     };
 
     render() {
