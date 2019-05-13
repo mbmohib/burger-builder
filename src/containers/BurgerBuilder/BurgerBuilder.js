@@ -6,32 +6,28 @@ import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 import Modal from '../../components/UI/Modal/Modal';
 import OrderSummery from '../../components/Burger/OrderSummery/OrderSummery';
-import axios from '../../axios-order';
 import Spinner from '../../components/UI/Spinner/Spinner';
 import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
-import * as actionTypes from '../../store/actions';
+import * as burgerBuilderActions from '../../store/actions/index';
 
 class BurgerBuilder extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            purchaseModalOpen: false,
-            loading: false,
-            error: null
+            purchaseModalOpen: false
         };
     }
 
     componentDidMount() {
-        // axios
-        //     .get('/ingredients.json')
-        //     .then(response => {
-        //         this.setState({ ingredients: response.data });
-        //     })
-        //     .catch(error => {
-        //         this.setState({ error: true });
-        //     });
+        // Get ingredients from API
+        this.props.onInitIngredients();
     }
 
+    /**
+     * Open/Close Modal
+     *
+     * @memberof BurgerBuilder
+     */
     purchaseModalHandler = () => {
         this.setState(prevState => {
             return {
@@ -40,6 +36,12 @@ class BurgerBuilder extends Component {
         });
     };
 
+    /**
+     * Check if any ingredient added & if added
+     * return true thus enabling order button
+     *
+     * @memberof BurgerBuilder
+     */
     updatePurchaseState(ingredients) {
         const sumIngredients = Object.keys(ingredients)
             .map(key => {
@@ -52,16 +54,25 @@ class BurgerBuilder extends Component {
         return sumIngredients > 0
     }
 
+    /**
+     * Close modal & navigate to checkout page
+     *
+     * @memberof BurgerBuilder
+     */
     handleContinuePurchase = () => {
         this.setState({ purchaseModalOpen: false });
+        this.props.onInitPurchase();
         this.props.history.push('/checkout');
     };
 
     render() {
+        /*
+        * Construct an object containing which
+        * ingredient's less button will be disabled
+        */
         const disabledInfo = {
             ...this.props.ings
         };
-
         for (let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0;
         }
@@ -74,20 +85,16 @@ class BurgerBuilder extends Component {
                             show={this.state.purchaseModalOpen}
                             clicked={this.purchaseModalHandler}
                         >
-                            {this.state.loading ? (
-                                <Spinner />
-                            ) : (
-                                <OrderSummery
-                                    ingredients={this.props.ings}
-                                    handleCancelPurchase={
-                                        this.purchaseModalHandler
-                                    }
-                                    handleContinuePurchase={
-                                        this.handleContinuePurchase
-                                    }
-                                    totalPrice={this.props.price}
-                                />
-                            )}
+                            <OrderSummery
+                                ingredients={this.props.ings}
+                                handleCancelPurchase={
+                                    this.purchaseModalHandler
+                                }
+                                handleContinuePurchase={
+                                    this.handleContinuePurchase
+                                }
+                                totalPrice={this.props.price}
+                            />
                         </Modal>
                         <Burger ingredients={this.props.ings} />
                         <BuildControls
@@ -101,7 +108,7 @@ class BurgerBuilder extends Component {
                             purchaseModalHandler={this.purchaseModalHandler}
                         />
                     </Aux>
-                ) : this.state.error ? (
+                ) : this.props.error ? (
                     <p style={{ textAlign: 'center' }}>
                         Ingredients are not loading! Please reload!
                     </p>
@@ -115,23 +122,21 @@ class BurgerBuilder extends Component {
 
 const mapStateToProps = state => {
     return {
-        ings: state.ingredients,
-        price: state.totalPrice
+        ings: state.burgerBuilder.ingredients,
+        price: state.burgerBuilder.totalPrice,
+        error: state.burgerBuilder.error
     };
 };
 
 const mapDispatchToProps = dispatch => {
     return {
+        onInitIngredients: () =>
+            dispatch(burgerBuilderActions.initIngredient()),
         onIngredientAdded: ingName =>
-            dispatch({
-                type: actionTypes.ADD_INGREDIENT,
-                ingredientName: ingName
-            }),
+            dispatch(burgerBuilderActions.addIngredient(ingName)),
         onIngredientRemoved: ingName =>
-            dispatch({
-                type: actionTypes.REMOVE_INGREDIENT,
-                ingredientName: ingName
-            })
+            dispatch(burgerBuilderActions.removeIngredient(ingName)),
+        onInitPurchase: () => dispatch(burgerBuilderActions.purchaseInit())
     };
 };
 
